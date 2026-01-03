@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import { z } from "zod"
 import { createUser } from "@/lib/auth"
+import { sendOnboardingEmail } from "@/lib/email"
 
 const salaryComponentSchema = z.object({
   type: z.enum(["percent", "fixed"]),
@@ -209,7 +210,20 @@ export async function POST(request: NextRequest) {
         customEmployeeId
       )
       // Log "Email Sent"
-      console.log(`[MOCK EMAIL] Sent credentials to ${validatedData.email}: Pwd: ${generatedPassword}`)
+      console.log(`[AUTH] Created user for ${validatedData.email}`)
+
+      try {
+        await sendOnboardingEmail(
+          validatedData.email,
+          `${validatedData.firstName} ${validatedData.lastName}`,
+          { email: validatedData.email, password: generatedPassword }
+        )
+        console.log(`[EMAIL] Onboarding email sent to ${validatedData.email}`)
+      } catch (emailErr) {
+        console.error("Failed to send email", emailErr)
+        // Don't fail the request, just log
+      }
+
     } catch (err) {
       console.error("Failed to create user account for employee", err)
       // We don't fail the request if user creation fails, but maybe we should warn?
