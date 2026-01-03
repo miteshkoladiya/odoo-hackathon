@@ -141,6 +141,11 @@ export default function TimeOffPage() {
      leave.leaveType?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Confirmation State
+  const [approveId, setApproveId] = useState<string | null>(null)
+
+  // ... (existing filter logic)
+
   const updateStatus = async (id: string, status: "approved" | "rejected", reason?: string) => {
       try {
         const res = await fetch("/api/leave-applications", {
@@ -150,19 +155,27 @@ export default function TimeOffPage() {
         })
         if (res.ok) {
             fetchLeaves()
+            // Refresh balances to show updated stats immediately
+            if (user?.role === "employee") fetchBalances()
+            
             setRejectId(null)
+            setApproveId(null)
             setRejectionReason("")
         } else {
-            alert("Failed to update status")
+            console.error("Failed to update status")
         }
       } catch (err) {
           console.error(err)
       }
   }
 
-  const handleApprove = async (id: string) => {
-      if (confirm("Are you sure you want to approve this request?")) {
-        await updateStatus(id, "approved")
+  const handleApproveClick = (id: string) => {
+      setApproveId(id)
+  }
+
+  const confirmApprove = async () => {
+      if (approveId) {
+        await updateStatus(approveId, "approved")
       }
   }
 
@@ -171,9 +184,12 @@ export default function TimeOffPage() {
   }
 
   const confirmReject = async () => {
-      if (!rejectionReason) return alert("Please provide a reason")
+      if (!rejectionReason) return // Could set error state here if needed
       await updateStatus(rejectId!, "rejected", rejectionReason)
   }
+
+
+
 
   return (
     <div className="space-y-6">
@@ -368,7 +384,7 @@ export default function TimeOffPage() {
                          <TableCell>
                            {leave.status === "pending" && (
                               <div className="flex gap-2">
-                                <Button size="sm" onClick={() => handleApprove(leave._id)} className="h-6 w-6 p-0 rounded-sm bg-green-500 hover:bg-green-600 text-white" title="Approve">✓</Button>
+                                <Button size="sm" onClick={() => handleApproveClick(leave._id)} className="h-6 w-6 p-0 rounded-sm bg-green-500 hover:bg-green-600 text-white" title="Approve">✓</Button>
                                 <Button size="sm" onClick={() => handleRejectClick(leave._id)} className="h-6 w-6 p-0 rounded-sm bg-red-500 hover:bg-red-600 text-white" title="Reject">✕</Button>
                               </div>
                            )}

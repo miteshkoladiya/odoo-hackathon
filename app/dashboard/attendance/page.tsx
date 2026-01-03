@@ -114,7 +114,16 @@ export default function AttendancePage() {
                       <TableCell>
                         {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "-"}
                       </TableCell>
-                      <TableCell>-</TableCell>
+                      <TableCell>
+                        {record.checkInTime && record.checkOutTime ? (() => {
+                           const start = new Date(record.checkInTime).getTime()
+                           const end = new Date(record.checkOutTime).getTime()
+                           const diff = end - start
+                           const hours = Math.floor(diff / (1000 * 60 * 60))
+                           const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+                           return `${hours}h ${minutes}m`
+                        })() : "-"}
+                      </TableCell>
                       <TableCell>
                          <Badge variant="outline" className={record.status === "present" ? "text-green-600 border-green-200 bg-green-50" : "text-yellow-600"}>
                            {record.status}
