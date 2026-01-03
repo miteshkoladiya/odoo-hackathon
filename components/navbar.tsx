@@ -29,6 +29,10 @@ export default function Navbar() {
     { label: "Time Off", href: "/dashboard/time-off", active: pathname.startsWith("/dashboard/time-off") },
   ]
 
+  if (user?.role === "admin") {
+      navItems.push({ label: "Payroll", href: "/dashboard/payroll", active: pathname.startsWith("/dashboard/payroll") })
+  }
+
   useEffect(() => {
     if (user?.employeeId) {
        checkStatus()

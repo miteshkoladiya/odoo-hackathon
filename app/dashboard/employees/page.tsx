@@ -94,7 +94,7 @@ export default function EmployeesPage() {
                 
                 <CardContent className="p-6 flex flex-col items-center text-center gap-3">
                   <Avatar className="h-20 w-20 border-2 border-gray-100">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${employee.firstName} ${employee.lastName}`} />
+                    <AvatarImage src={employee.photo || `https://api.dicebear.com/7.x/initials/svg?seed=${employee.firstName} ${employee.lastName}`} className="object-cover" />
                     <AvatarFallback>{employee.firstName[0]}{employee.lastName[0]}</AvatarFallback>
                   </Avatar>
                   
