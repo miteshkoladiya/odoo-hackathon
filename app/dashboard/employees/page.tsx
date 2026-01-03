@@ -2,22 +2,30 @@
 
 import { useEffect, useState } from "react"
 import { useUser } from "@/hooks/useUser"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Search, MapPin, Mail, Phone, Plane, Circle } from "lucide-react"
+import { Plus, Search, MapPin, Mail, Phone, Plane, Circle, Camera } from "lucide-react"
 import Link from "next/link"
 
 export default function EmployeesPage() {
-  const { user } = useUser()
+  const { user, loading: authLoading } = useUser()
+  const router = useRouter()
   const [employees, setEmployees] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
 
   useEffect(() => {
-    fetchEmployees()
-  }, [])
+    if (!authLoading && user) {
+        if (user.role === "employee") {
+            router.replace("/dashboard/employees/me")
+        } else {
+            fetchEmployees()
+        }
+    }
+  }, [user, authLoading, router])
 
   const fetchEmployees = async () => {
     try {
@@ -70,9 +78,18 @@ export default function EmployeesPage() {
           {filteredEmployees.map((employee) => (
             <Link key={employee._id} href={`/dashboard/employees/${employee._id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-transparent hover:border-l-purple-500 relative">
-                <div className="absolute top-3 right-3">
-                   {/* Status Indicator Mockup Logic */}
-                   <div className="w-3 h-3 rounded-full bg-green-500 border border-white shadow-sm" title="Present"></div>
+                <div className="absolute top-3 right-3" title={employee.currentStatus === "present" ? "Present" : employee.currentStatus === "onLeave" ? "On Leave" : "Absent"}>
+                   {employee.currentStatus === "present" && (
+                      <div className="w-3 h-3 rounded-full bg-green-500 border border-white shadow-sm ring-1 ring-green-100"></div>
+                   )}
+                   {employee.currentStatus === "onLeave" && (
+                      <div className="text-blue-500 bg-blue-50 p-1 rounded-full border border-blue-100">
+                         <Plane className="w-3 h-3" />
+                      </div>
+                   )}
+                   {(employee.currentStatus === "absent" || !employee.currentStatus) && (
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 border border-white shadow-sm ring-1 ring-yellow-100"></div>
+                   )}
                 </div>
                 
                 <CardContent className="p-6 flex flex-col items-center text-center gap-3">

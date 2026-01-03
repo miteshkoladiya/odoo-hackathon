@@ -323,10 +323,10 @@ export default function TimeOffPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-md"
             />
-            <div className="flex gap-2">
+            {/* <div className="flex gap-2">
               <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">To Approve</Badge>
               <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">All</Badge>
-            </div>
+            </div> */}
           </div>
         )
       }

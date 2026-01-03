@@ -28,6 +28,11 @@ export default function NewEmployeePage() {
     department: "",
     manager: "",
     joinDate: new Date().toISOString().split("T")[0],
+    dob: "",
+    gender: "",
+    maritalStatus: "",
+    nationality: "",
+    address: "",
     _id: "",
   })
   const [loading, setLoading] = useState(false)
@@ -132,48 +137,93 @@ export default function NewEmployeePage() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required />
-              </div>
+            <div className="space-y-4">
+               <h3 className="font-semibold text-lg border-b pb-2">Professional Details</h3>
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="email">Email *</Label>
+                     <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="mobile">Mobile *</Label>
+                     <Input id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="jobPosition">Job Position *</Label>
+                     <Input id="jobPosition" name="jobPosition" value={formData.jobPosition} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="department">Department *</Label>
+                     <Input id="department" name="department" value={formData.department} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="manager">Manager *</Label>
+                     <Input id="manager" name="manager" value={formData.manager} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="joinDate">Join Date *</Label>
+                     <Input id="joinDate" name="joinDate" type="date" value={formData.joinDate} onChange={handleChange} required />
+                  </div>
+               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                 <Label htmlFor="email">Email *</Label>
-                 <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-              </div>
-              <div className="space-y-2">
-                 <Label htmlFor="mobile">Mobile</Label>
-                 <Input id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                 <Label htmlFor="jobPosition">Job Position</Label>
-                 <Input id="jobPosition" name="jobPosition" value={formData.jobPosition} onChange={handleChange} />
-              </div>
-              <div className="space-y-2">
-                 <Label htmlFor="department">Department</Label>
-                 <Input id="department" name="department" value={formData.department} onChange={handleChange} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                 <Label htmlFor="manager">Manager</Label>
-                 <Input id="manager" name="manager" value={formData.manager} onChange={handleChange} />
-              </div>
-              <div className="space-y-2">
-                 <Label htmlFor="joinDate">Join Date</Label>
-                 <Input id="joinDate" name="joinDate" type="date" value={formData.joinDate} onChange={handleChange} />
-              </div>
+            <div className="space-y-4">
+               <h3 className="font-semibold text-lg border-b pb-2">Personal Details</h3>
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                     <Label htmlFor="dob">Date of Birth *</Label>
+                     <Input id="dob" name="dob" type="date" value={formData.dob} onChange={handleChange} required />
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="gender">Gender *</Label>
+                     <select 
+                        id="gender" 
+                        name="gender" 
+                        value={formData.gender} 
+                        onChange={handleChange as any} 
+                        required
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                     >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                     </select>
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="maritalStatus">Marital Status *</Label>
+                     <select 
+                        id="maritalStatus" 
+                        name="maritalStatus" 
+                        value={formData.maritalStatus} 
+                        onChange={handleChange as any} 
+                        required
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                     >
+                        <option value="">Select Status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                     </select>
+                  </div>
+                  <div className="space-y-2">
+                     <Label htmlFor="nationality">Nationality *</Label>
+                     <Input id="nationality" name="nationality" value={formData.nationality} onChange={handleChange} required />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                     <Label htmlFor="address">Address *</Label>
+                     <Input id="address" name="address" value={formData.address} onChange={handleChange} required />
+                  </div>
+               </div>
             </div>
 
             <div className="flex gap-4 pt-4">

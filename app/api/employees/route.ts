@@ -13,22 +13,26 @@ const employeeSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   email: z.string().email(),
-  // Work Info
-  jobPosition: z.string().optional(),
-  department: z.string().optional(),
-  manager: z.string().optional(),
-  location: z.string().optional(),
-  mobile: z.string().optional(),
 
-  // Private Info
-  dob: z.string().optional(), // Receive as string from frontend, convert to Date if needed or keep as string/date
-  address: z.string().optional(),
-  nationality: z.string().optional(),
+  // Photo (Base64)
+  photo: z.string().optional(),
+
+  // Work Info (Required per request)
+  jobPosition: z.string().min(1, "Job Position is required"),
+  department: z.string().min(1, "Department is required"),
+  manager: z.string().min(1, "Manager is required"),
+  location: z.string().optional(), // Maybe keep optional?
+  mobile: z.string().min(10, "Mobile number is required"),
+
+  // Private Info (Required per request - strict creation)
+  dob: z.string().min(1, "Date of Birth is required"),
+  address: z.string().min(1, "Address is required"),
+  nationality: z.string().min(1, "Nationality is required"),
   personalEmail: z.string().email().optional().or(z.literal("")),
-  gender: z.enum(["Male", "Female", "Other"]).optional(),
-  maritalStatus: z.enum(["Single", "Married", "Divorced", "Widowed"]).optional(),
+  gender: z.enum(["Male", "Female", "Other"]),
+  maritalStatus: z.enum(["Single", "Married", "Divorced", "Widowed"]),
 
-  // Bank Details
+  // Bank Details (Keep optional as usually added later, or make strict? "All fields". Let's try Strict for core, optional for bank/resume to avoid UI overload on creation)
   bankDetails: z.object({
     accountNumber: z.string(),
     bankName: z.string(),
@@ -96,7 +100,39 @@ export async function GET(request: NextRequest) {
 
     const employees = await db.collection("employees").find(query).toArray()
 
-    return NextResponse.json({ employees })
+    // --- Status Calculation (Efficient Batch Fetch) ---
+    // 1. Get Today's Attendance for ALL users
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const todayAttendance = await db.collection("attendance").find({
+      date: { $gte: startOfDay }
+    }).toArray()
+
+    const attendanceMap = new Set(todayAttendance.map(a => a.employeeId))
+
+    // 2. Get Active Leaves for ALL users
+    const now = new Date()
+    const activeLeaves = await db.collection("leave_applications").find({
+      status: "approved",
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    }).toArray()
+
+    const leaveMap = new Set(activeLeaves.map(l => l.employeeId))
+
+    // 3. Attach Status
+    const employeesWithStatus = employees.map(emp => {
+      let status = "absent" // Default (Yellow)
+      if (attendanceMap.has(emp.employeeId)) {
+        status = "present" // Green
+      } else if (leaveMap.has(emp.employeeId)) {
+        status = "onLeave" // Airplane
+      }
+      return { ...emp, currentStatus: status }
+    })
+
+    return NextResponse.json({ employees: employeesWithStatus })
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch employees" }, { status: 500 })
   }
@@ -186,5 +222,38 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create employee"
     return NextResponse.json({ error: message }, { status: 400 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { db } = await connectToDatabase()
+    const { _id, ...updateData } = await request.json()
+
+    if (!_id) {
+      return NextResponse.json({ error: "Missing Employee ID" }, { status: 400 })
+    }
+
+    // Protect immutable fields
+    delete updateData.employeeId
+    delete updateData.createdAt
+    delete updateData._id
+
+    // If 'dob' is provided, ensure it's a string or date, straightforward $set
+
+    // Validate if necessary or trust the schema. 
+    // We'll trust the partial update for now or could parse with .partial() if Zod supported it easily here (it does).
+    // const partialSchema = employeeSchema.partial()
+    // const validated = partialSchema.parse(updateData)
+
+    await db.collection("employees").updateOne(
+      { _id: new ObjectId(_id) },
+      { $set: { ...updateData, updatedAt: new Date() } }
+    )
+
+    return NextResponse.json({ success: true, message: "Employee updated successfully" })
+  } catch (error) {
+    console.error("Update Error", error)
+    return NextResponse.json({ error: "Failed to update employee" }, { status: 500 })
   }
 }
