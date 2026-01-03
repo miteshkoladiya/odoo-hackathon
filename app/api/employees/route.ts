@@ -87,7 +87,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query.$or = [{ firstName: { $regex: search, $options: "i" } }, { lastName: { $regex: search, $options: "i" } }]
+      query.$or = [
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ]
     }
 
     const employees = await db.collection("employees").find(query).toArray()
@@ -130,7 +134,7 @@ export async function POST(request: NextRequest) {
       ...validatedData,
       employeeId: customEmployeeId,
       joinDate: new Date(),
-      leaveBalances: { paid: 24, sick: 7 }, // Default allocation
+      leaveBalances: { paid: 24, sick: 7, unpaid: 0 }, // Default allocation
       createdAt: new Date(),
       updatedAt: new Date(),
     }
