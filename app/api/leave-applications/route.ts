@@ -125,33 +125,48 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Leave application not found" }, { status: 404 })
     }
 
-    // Process Balance Deduction if being approved (and not already approved)
-    if (status === "approved" && leave.status !== "approved") {
+    // Process Balance Deduction/Refund
+    if (status !== leave.status) {
       const start = new Date(leave.startDate)
       const end = new Date(leave.endDate)
       const diffTime = Math.abs(end.getTime() - start.getTime())
       const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
-      // Check and Initialize Balances if missing
       const employee = await db.collection("employees").findOne({ employeeId: leave.employeeId })
 
       if (employee) {
+        // Initialize balances if they don't exist
         if (!employee.leaveBalances) {
           await db.collection("employees").updateOne(
             { employeeId: leave.employeeId },
-            { $set: { leaveBalances: { paid: 24, sick: 7 } } }
+            { $set: { leaveBalances: { paid: 24, sick: 7, unpaid: 0 } } }
           )
         }
 
         let balanceField = ""
         if (leave.leaveType === "annual") balanceField = "leaveBalances.paid"
         else if (leave.leaveType === "sick") balanceField = "leaveBalances.sick"
+        else if (leave.leaveType === "unpaid") balanceField = "leaveBalances.unpaid"
 
         if (balanceField) {
-          await db.collection("employees").updateOne(
-            { employeeId: leave.employeeId },
-            { $inc: { [balanceField]: -days } }
-          )
+          let change = 0
+          // If approving (and wasn't approved)
+          if (status === "approved" && leave.status !== "approved") {
+            // Unpaid: INCREASE usage. Paid/Sick: DECREASE balance.
+            change = leave.leaveType === "unpaid" ? days : -days
+          }
+          // If rejecting (and was approved), Refund/Revert
+          else if (status === "rejected" && leave.status === "approved") {
+            // Unpaid: DECREASE usage. Paid/Sick: INCREASE balance.
+            change = leave.leaveType === "unpaid" ? -days : days
+          }
+
+          if (change !== 0) {
+            await db.collection("employees").updateOne(
+              { employeeId: leave.employeeId },
+              { $inc: { [balanceField]: change } }
+            )
+          }
         }
       }
     }
