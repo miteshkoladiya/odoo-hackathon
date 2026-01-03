@@ -151,6 +151,11 @@ export default function TimeOffPage() {
     leave.leaveType?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Confirmation State
+  const [approveId, setApproveId] = useState<string | null>(null)
+
+  // ... (existing filter logic)
+
   const updateStatus = async (id: string, status: "approved" | "rejected", reason?: string) => {
     try {
       const res = await fetch("/api/leave-applications", {
@@ -160,8 +165,9 @@ export default function TimeOffPage() {
       })
       if (res.ok) {
         fetchLeaves()
-        fetchBalances() // Refresh stats
+        if (user?.role === "employee") fetchBalances()
         setRejectId(null)
+        setApproveId(null)
         setRejectionReason("")
       } else {
         alert("Failed to update status")
@@ -174,6 +180,18 @@ export default function TimeOffPage() {
   const handleApprove = async (id: string) => {
     if (confirm("Are you sure you want to approve this request?")) {
       await updateStatus(id, "approved")
+    }
+  }
+
+  const handleApproveClick = (id: string) => {
+    if (confirm("Are you sure you want to approve this request?")) {
+      updateStatus(id, "approved")
+    }
+  }
+
+  const confirmApprove = async () => {
+    if (approveId) {
+      await updateStatus(approveId, "approved")
     }
   }
 
@@ -296,53 +314,57 @@ export default function TimeOffPage() {
       </div>
 
       {/* ADMIN / HR VIEW: Search Bar & No Personal Stats */}
-      {["admin", "hr"].includes(user?.role || "") && (
-        <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center gap-4">
-          <Input
-            placeholder="Search requests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
-          <div className="flex gap-2">
-            <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">To Approve</Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">All</Badge>
+      {
+        ["admin", "hr"].includes(user?.role || "") && (
+          <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center gap-4">
+            <Input
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
+            />
+            <div className="flex gap-2">
+              <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">To Approve</Badge>
+              <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">All</Badge>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* EMPLOYEE VIEW: Allocation Stats */}
-      {user?.role === "employee" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4 flex justify-between items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Paid Time Off</p>
-                <h3 className="text-2xl font-bold text-blue-600">{balances.paid} Days</h3>
-              </div>
-              <span className="text-xs text-gray-400">Available</span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex justify-between items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Sick Time Off</p>
-                <h3 className="text-2xl font-bold text-blue-600">{balances.sick} Days</h3>
-              </div>
-              <span className="text-xs text-gray-400">Available</span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex justify-between items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Unpaid Time Off</p>
-                <h3 className="text-2xl font-bold text-gray-700">{balances.unpaid} Days</h3>
-              </div>
-              <span className="text-xs text-gray-400">Used</span>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {
+        user?.role === "employee" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Paid Time Off</p>
+                  <h3 className="text-2xl font-bold text-blue-600">{balances.paid} Days</h3>
+                </div>
+                <span className="text-xs text-gray-400">Available</span>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Sick Time Off</p>
+                  <h3 className="text-2xl font-bold text-blue-600">{balances.sick} Days</h3>
+                </div>
+                <span className="text-xs text-gray-400">Available</span>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Unpaid Time Off</p>
+                  <h3 className="text-2xl font-bold text-gray-700">{balances.unpaid} Days</h3>
+                </div>
+                <span className="text-xs text-gray-400">Used</span>
+              </CardContent>
+            </Card>
+          </div>
+        )
+      }
 
       <Card>
         <CardContent className="p-0">
@@ -399,8 +421,9 @@ export default function TimeOffPage() {
               )}
             </TableBody>
           </Table>
+
         </CardContent>
       </Card>
-    </div>
+    </div >
   )
 }
