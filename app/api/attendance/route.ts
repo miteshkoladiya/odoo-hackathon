@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
           date: 1,
           checkInTime: 1,
           checkOutTime: 1,
+          sessions: 1,
           status: 1,
           createdAt: 1,
           updatedAt: 1,
@@ -66,38 +67,44 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { db } = await connectToDatabase()
-    const { employeeId, checkInTime, status } = await request.json()
+    const { employeeId, status } = await request.json()
 
-    const today = new Date()
+    const now = new Date()
+    const today = new Date(now)
     today.setHours(0, 0, 0, 0)
 
     const existingAttendance = await db.collection("attendance").findOne({ employeeId, date: { $gte: today } })
 
     if (existingAttendance) {
+      if (existingAttendance.checkOutTime) {
+        return NextResponse.json({ error: "You have already checked out for today." }, { status: 400 })
+      }
+
       await db.collection("attendance").updateOne(
         { _id: existingAttendance._id },
         {
           $set: {
-            checkOutTime: checkInTime,
-            updatedAt: new Date(),
+            checkOutTime: now,
+            updatedAt: now,
           },
         },
       )
-      return NextResponse.json({ success: true, message: "Check-out recorded" })
+      return NextResponse.json({ success: true, message: "Check-out recorded", checkedOut: true })
     }
 
     const attendance = {
       employeeId,
-      date: new Date(today),
-      checkInTime,
+      date: today,
+      checkInTime: now,
+      checkOutTime: null,
       status: status || "present",
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     }
 
     await db.collection("attendance").insertOne(attendance)
 
-    return NextResponse.json({ success: true, message: "Check-in recorded" }, { status: 201 })
+    return NextResponse.json({ success: true, message: "Check-in recorded", checkedOut: false }, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: "Failed to record attendance" }, { status: 500 })
   }
