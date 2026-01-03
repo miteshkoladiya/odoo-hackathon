@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
-const Attendance = require('../models/Attendence');
+const Attendance = require('../models/Attendance');
 const Leave = require('../models/Leave');
 const LeaveBalance = require('../models/LeaveBalance');
 const { authenticate, isAdminOrHR } = require('../middleware/auth');

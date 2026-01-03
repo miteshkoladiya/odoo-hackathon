@@ -3,7 +3,7 @@ const router = express.Router();
 const Leave = require('../models/Leave');
 const LeaveBalance = require('../models/LeaveBalance');
 const Employee = require('../models/Employee');
-const Attendance = require('../models/Attendence');
+const Attendance = require('../models/Attendance');
 const { authenticate, isAdminOrHR } = require('../middleware/auth');
 
 // @route   POST /api/leaves/apply
